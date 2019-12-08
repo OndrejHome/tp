@@ -12,7 +12,7 @@ then
     # if the action was not the change of IP address, then lets quietly exit
     exit 0;
 fi
-# we have matched the event that IP was changed (or aquired) from DHCP
+# we have matched the event that IP was changed (or acquired) from DHCP
 # first lets make sure we have tool to send updated IP to DNS
 if ! command -v nsupdate >/dev/null; then
 	logger "ddns: Missing 'nsupdate' command: NOT updating DNS."
@@ -24,7 +24,7 @@ IP_OLD=$(cat /run/NetworkManager/current_ipv4 2>/dev/null)
 # extract IPv4 address
 IP=$(echo "$IP4_ADDRESS_0"|cut -d/ -f1)
 
-# check if IPv4 address changed from previous time, continue only if htere was change
+# check if IPv4 address changed from previous time, continue only if there was change
 # (or when this is the first time running = when IP_OLD is empty
 if [ "$IP_OLD" = "$IP" ]; then
     logger "ddns: No change in IP address, not updating DNS."
