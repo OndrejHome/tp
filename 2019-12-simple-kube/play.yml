@@ -11,7 +11,6 @@
         regexp: '^([^#].*?\sswap\s+swap\s+.*)$'
         replace: '# \1'
         backup: True
-      notify: runtime disable swap
     - name: create kubernetes YUM repository
       yum_repository:
         name: 'kubernetes'
@@ -77,6 +76,14 @@
         regexp: "{{ ansible_default_ipv4['address'] }} "
         line: "{{ ansible_default_ipv4['address'] }} {{ ansible_fqdn.split('.')[0] }}"
     - meta: flush_handlers
+    - name: check active swap on system
+      command: swapon --noheadings --raw
+      register: swap
+      changed_when: false
+      check_mode: false
+    - name: runtime disable all active swap
+      command: swapoff -a
+      when: swap.stdout|length > 0
     - name: generate kubeadm-config.yaml deployment config file
       template:
         src: 'kubeadm-config.yaml.j2'
@@ -111,8 +118,6 @@
       command: >-
         kubectl taint nodes {{ ansible_fqdn }} node-role.kubernetes.io/master:NoSchedule-
   handlers:
-    - name: runtime disable swap
-      command: swapoff -a
     - name: restart docker
       service:
         name: docker
