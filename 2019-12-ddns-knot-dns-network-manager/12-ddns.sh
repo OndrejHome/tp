@@ -6,7 +6,11 @@ DNS_SERVER=""
 DNS_HOSTNAME=""
 ## == configurable variables == END
 
-if [ "$1" != "$MONITORED_DEVICE" ] || [ "$2" != "dhcp4-change" ] && [ "$2" != "up" ]
+if [ "$1" != "$MONITORED_DEVICE" ]; then
+    exit 0;
+fi
+
+if [ "$2" != "dhcp4-change" ] && [ "$2" != "up" ]
 then
     # if we have not matched the MONITORED_DEVICE or 
     # if the action was not the change of IP address, then lets quietly exit
@@ -32,7 +36,7 @@ if [ "$IP_OLD" = "$IP" ]; then
 fi
 
 # update IPv4 into DNS
-logger "ddns: Attempting to update IP to '$IP'."
+logger "ddns: Attempting to update IP to '$IP'. ($1)"
 nsupdate -y "$TSIG_STRING" <<EOF
 server $DNS_SERVER
 update delete $DNS_HOSTNAME a
