@@ -1,0 +1,11 @@
+[Unit]
+Description=Gentoo Portage tree sync
+StartLimitInterval=30m
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=gentoo-sync
+ExecStart=bash /home/gentoo-sync/gentoo-portage-sync-service.sh
+RestartSec=5min
+Restart=on-failure

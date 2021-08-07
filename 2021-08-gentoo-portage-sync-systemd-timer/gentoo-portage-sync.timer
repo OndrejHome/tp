@@ -1,0 +1,9 @@
+[Unit]
+Description=Sync Gentoo Portage tree once a day
+
+[Timer]
+OnCalendar=*-*-* 02:17:00
+# run once a day at 2:17 AM
+
+[Install]
+WantedBy=timers.target
