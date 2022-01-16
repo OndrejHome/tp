@@ -1,0 +1,36 @@
+<html>
+<head><title>REPOSYNC server</title>
+<script src="sortable.js"></script>
+</head>
+<body>
+
+<h2 id='repolist'>Repository list</h2>
+
+<p>Below table shows state of reposync for repositories on local server.</p>
+<ul>
+<li><strong>OK</strong> - repository was succesfully synchronized, check 'Last change' for date of sync.</li>
+<li><strong>SYNC ERROR</strong> - there was error during reposync, repository could be damaged or incomplete.</li>
+<li><strong>== syncing ==</strong> - repository is currently syncing, you may experience errors with missing packages until the sync is finished.</li>
+</ul>
+<hr/>
+
+<table border=1 id='sync-table'>
+<thead>
+<tr>
+  <th>Current state (<u style='color: blue;'>sort</u>)</th>
+  <th>Last change (<u style='color: blue;'>sort</u>)</th>
+  <th>Repo ID (<u style='color: blue;'>sort</u>)</th>
+  <th>.repo file</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<script>
+window.addEventListener("load", function(){
+  createTable("sync-table", null, "sortable");
+});
+</script>
+</body>
+</html>
