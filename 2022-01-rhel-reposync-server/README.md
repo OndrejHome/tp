@@ -17,7 +17,6 @@ SIDE NOTE: Motivation for creating this script was lack of simple tooling that c
 - install `yum-utils` package
 - get all files from this directory on your system
   - `sync_rhel_rpms-latest.sh` - main sync script with configuration
-  - `gen_repofile.sh` - script for generating '.repo' files
   - `repo-state.html` - webpage with table showing sync status and links to '.repo' files
   - `sortable.js` - (optional) javascript to enable sorting within webpage tables
   - `template.repo` - writable file that will be used when syncing repositories
@@ -29,7 +28,6 @@ SIDE NOTE: Motivation for creating this script was lack of simple tooling that c
   - `rpms_subdir` - subdirectory for RPM repositories - example `rpms` -> `/repos/rpms` will contain directories with RPM repositories
   - `repodata_subdir` - subdirectory for RPM repositories metadata - example `repodata` -> `/repos/repodata` will contain directories with RPM repository metadata
   - `template_file` - path to `template.repo` file, this file must be writable to script - example `/root/template.repo`
-  - `genrepo_script` - path to `gen_repofile.sh` script - example `/root/gen_repofile.sh`
 - check that you can see the `repo-state.html` file at webserver location - example `http://192.168.5.31/repo-state.html`
 
 ### Usage
