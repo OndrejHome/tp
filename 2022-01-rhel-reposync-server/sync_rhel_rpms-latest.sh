@@ -1,6 +1,5 @@
 #!/bin/bash
 template_file='/root/template.repo'
-genrepo_script='/root/gen_repofile.sh'
 download_dir=${download_dir:-/repos}
 rpms_subdir='rpms'
 repodata_subdir='repodata'
@@ -14,10 +13,6 @@ fi
 
 if [ ! -f "$template_file" ]; then
   echo "'$template_file' is not a file!"
-  exit 1
-fi
-if [ ! -f "$genrepo_script" ]; then
-  echo "'$genrepo_script' is not a file!"
   exit 1
 fi
 
@@ -89,7 +84,17 @@ else
 	sed -i "s;^.*td>$1<.*$;<tr><td>SYNC ERROR</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
 fi
 echo "Generating .repo file and checking its presence on webserver..."
-$genrepo_script "$download_dir/$1" "$base_url/$rpms_subdir" 
+cat > "$download_dir/$rpms_subdir/$1.repo" <<EOF
+[$1]
+metadata_expire = 86400
+enabled_metadata = 1
+baseurl = $base_url/$rpms_subdir/$1
+ui_repoid_vars = basearch
+name = reposync: $1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled = 1
+gpgcheck = 1
+EOF
 if curl --fail -k --head "$base_url/$rpms_subdir/$1.repo" >/dev/null 2>&1; then
   echo "OK, repo file exists at $base_url/$rpms_subdir/$1.repo"
 else
