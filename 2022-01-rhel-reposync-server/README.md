@@ -20,6 +20,7 @@ SIDE NOTE: Motivation for creating this script was lack of simple tooling that c
   - `gen_repofile.sh` - script for generating '.repo' files
   - `repo-state.html` - webpage with table showing sync status and links to '.repo' files
   - `sortable.js` - (optional) javascript to enable sorting within webpage tables
+  - `template.repo` - writable file that will be used when syncing repositories
 - install webserver on local machine and start it (further examples will assume that webserver can be reached via http://192.168.5.31/ URL)
 - decide to which directories the script will download RPM repositories and edit `sync_rhel_rpms-latest.sh` script to reflect that
   - `download_dir` - based directory for downloads (inside web root) - example `/repos`

@@ -1,0 +1,12 @@
+[REPONAME]
+name = REPONAME
+baseurl = REPOURL
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/1234567890123456789-key.pem
+sslclientcert = /etc/pki/entitlement/1234567890123456789.pem
+metadata_expire = 86400
+enabled_metadata = 0
