@@ -50,16 +50,16 @@ echo "Created temporary config '$tmp_config_file'"
 ## =====
 echo "Creating repository directories and metadata symlinks..."
 # 1/3
-if [ ! -d "$download_dir/$1" ]; then
-	mkdir "$download_dir/$1"
+if [ ! -d "$download_dir/$rpms_subdir/$1" ]; then
+	mkdir "$download_dir/$rpms_subdir/$1"
 fi
 # 2/3
 if [ ! -d "$download_dir/$repodata_subdir/$1" ]; then
 	mkdir "$download_dir/$repodata_subdir/$1"
 fi
 # 3/3
-if [ ! -L "$download_dir/$1/$repodata_subdir" ]; then
-	ln -s "../../$repodata_subdir/$1/repodata" "$download_dir/$1/repodata"
+if [ ! -L "$download_dir/$rpms_subdir/$1/repodata" ]; then
+	ln -s "../../$repodata_subdir/$1/repodata" "$download_dir/$rpms_subdir/$1/repodata"
 fi
 
 # mark repository as syncing
