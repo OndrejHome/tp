@@ -31,14 +31,24 @@ if [ ! -f "$entitlement_cert_file" ]; then
   sed -i "s#/etc/pki/entitlement/[0-9]\+#/etc/pki/entitlement/${new_entitlement_id}#" "$template_file"
 fi
 
+# mark repository as 'repocheck'
+if grep -q "td>$1<" "$repo_state_file"; then
+  sed -i "s;^.*td>$1<.*$;<tr><td>== repocheck ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
+else
+  # if there is no line with repository, then create it in first table on page
+  awk -i inplace -v "date=$(date '+%Y-%m-%d %H:%M')" -v "repourl=$base_url/$rpms_subdir/$1.repo" -v "reponame=$1" '{print} /<tbody>/ && !x {printf "<tr><td>== repocheck ==</td><td>%s</td><td>%s</td><td><a href=\"%s\">%s.repo</a></td></tr>",date,reponame,repourl,reponame; x++}' "$repo_state_file"
+fi
+
 # test if we are able to retrieve repository using the cert we have
 key_file="${entitlement_cert_file//\.pem/-key.pem}"
 curl --fail -k --cert "$entitlement_cert_file" --key "$key_file" --head "$2/repodata/repomd.xml" >/dev/null 2>&1
 repo_acess_check="$?"
 if [ "$repo_acess_check" = "0" ]; then
 	echo "We can access repository data, proceeding with download"
+  	sed -i "s;^.*td>$1<.*$;<tr><td>OK repo access</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
 else
 	echo "We cannot get repository metadata with this ($entitlement_cert_file) certificate. giving up - exit code $repo_acess_check"
+  	sed -i "s;^.*td>$1<.*$;<tr><td>ERROR no repo access</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
 	exit 2
 fi
 ## =====
@@ -62,13 +72,7 @@ if [ ! -L "$download_dir/$rpms_subdir/$1/repodata" ]; then
 	ln -s "../../$repodata_subdir/$1/repodata" "$download_dir/$rpms_subdir/$1/repodata"
 fi
 
-# mark repository as syncing
-if grep -q "td>$1<" "$repo_state_file"; then
-  sed -i "s;^.*td>$1<.*$;<tr><td>== syncing ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
-else
-  # if there is no line with repository, then create it in first table on page
-  awk -i inplace -v "date=$(date '+%Y-%m-%d %H:%M')" -v "repourl=$base_url/$rpms_subdir/$1.repo" -v "reponame=$1" '{print} /<tbody>/ && !x {print "print "<tr><td>== syncing ==</td><td>",date,"</td><td>",reponame,"</td><td><a href='",repourl,"'>",reponame,".repo</a></td></tr>"; x++}' "$repo_state_file"
-fi
+sed -i "s;^.*td>$1<.*$;<tr><td>== syncing ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
 
 echo "Downloading packages ..."
 echo "  download_dir: $download_dir/$rpms_subdir/$1"

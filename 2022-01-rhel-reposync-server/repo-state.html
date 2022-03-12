@@ -8,9 +8,12 @@
 
 <p>Below table shows state of reposync for repositories on local server.</p>
 <ul>
+<li><strong>== repocheck ==</strong> - checking if we have access to repository before starting sync</li>
+<li><strong>OK repo access</strong> - we can access repository with current credentials but the sync has not yet started</li>
+<li><strong>ERROR no repo access</strong> - we cannot access repository with current credentials, sync cannot start</li>
+<li><strong>== syncing ==</strong> - repository is currently syncing, you may experience errors with missing packages until the sync is finished.</li>
 <li><strong>OK</strong> - repository was succesfully synchronized, check 'Last change' for date of sync.</li>
 <li><strong>SYNC ERROR</strong> - there was error during reposync, repository could be damaged or incomplete.</li>
-<li><strong>== syncing ==</strong> - repository is currently syncing, you may experience errors with missing packages until the sync is finished.</li>
 </ul>
 <hr/>
 
