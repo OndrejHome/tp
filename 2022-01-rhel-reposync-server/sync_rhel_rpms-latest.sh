@@ -36,7 +36,7 @@ if grep -q "td>$1<" "$repo_state_file"; then
   sed -i "s;^.*td>$1<.*$;<tr><td>== repocheck ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$1</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
 else
   # if there is no line with repository, then create it in first table on page
-  awk -i inplace -v "date=$(date '+%Y-%m-%d %H:%M')" -v "repourl=$base_url/$rpms_subdir/$1.repo" -v "reponame=$1" '{print} /<tbody>/ && !x {printf "<tr><td>== repocheck ==</td><td>%s</td><td>%s</td><td><a href=\"%s\">%s.repo</a></td></tr>",date,reponame,repourl,reponame; x++}' "$repo_state_file"
+  awk -i inplace -v "date=$(date '+%Y-%m-%d %H:%M')" -v "repourl=$base_url/$rpms_subdir/$1.repo" -v "reponame=$1" '{print} /<tbody>/ && !x {printf "<tr><td>== repocheck ==</td><td>%s</td><td>%s</td><td><a href=\"%s\">%s.repo</a></td></tr>\n",date,reponame,repourl,reponame; x++}' "$repo_state_file"
 fi
 
 # test if we are able to retrieve repository using the cert we have
