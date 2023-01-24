@@ -1,0 +1,173 @@
+diff --git a/doc/source/admin/emulator.conf b/doc/source/admin/emulator.conf
+index 4dee4cf..dac7217 100644
+--- a/doc/source/admin/emulator.conf
++++ b/doc/source/admin/emulator.conf
+@@ -101,6 +101,12 @@ SUSHY_EMULATOR_VMEDIA_DEVICES = {
+ # when retrieving the image.
+ SUSHY_EMULATOR_VMEDIA_VERIFY_SSL = False
+ 
++# Instruct to first download the inserted media and then upload it to hypervisor
++# to be used as localy mounted file. Machine running sushy-tools downloads the media.
++# If this is set to to False then media is URL is just passed to configuration and hypervisor
++# will be accessing the media directly. - at the moment just libvirt driver supports this.
++SUSHY_EMULATOR_VMEDIA_DOWNLOAD_TO_HYPERVISOR = True
++
+ # This map contains statically configured Redfish Storage resource linked
+ # up with the Systems resource, keyed by the UUIDs of the Systems.
+ SUSHY_EMULATOR_STORAGE = {
+diff --git a/sushy_tools/emulator/resources/systems/libvirtdriver.py b/sushy_tools/emulator/resources/systems/libvirtdriver.py
+index 4168ee3..7e86fa6 100644
+--- a/sushy_tools/emulator/resources/systems/libvirtdriver.py
++++ b/sushy_tools/emulator/resources/systems/libvirtdriver.py
+@@ -18,6 +18,8 @@ from collections import namedtuple
+ import os
+ import uuid
+ import xml.etree.ElementTree as ET
++from urllib.parse import urlparse
++import re
+ 
+ from sushy_tools.emulator import constants
+ from sushy_tools.emulator import memoize
+@@ -949,9 +951,12 @@ class LibvirtDriver(AbstractSystemsDriver):
+ 
+         controller_type = self._default_controller(domain_tree)
+ 
++        download_vmedia = self._config.get('SUSHY_EMULATOR_VMEDIA_DOWNLOAD_TO_HYPERVISOR', True)
+         with libvirt_open(self._uri) as conn:
+-
+-            image_path = self._upload_image(domain, conn, boot_image)
++            if download_vmedia:
++                image_path = self._upload_image(domain, conn, boot_image)
++            else:
++                image_path = boot_image
+ 
+             try:
+                 lv_device = self.BOOT_DEVICE_MAP[device]
+@@ -1012,7 +1017,10 @@ class LibvirtDriver(AbstractSystemsDriver):
+             # Add disk element pointing to the boot image
+ 
+             disk_element = ET.SubElement(device_element, 'disk')
+-            disk_element.set('type', 'file')
++            if download_vmedia:
++                disk_element.set('type', 'file')
++            else:
++                disk_element.set('type', 'network')
+             disk_element.set('device', lv_device)
+ 
+             target_element = ET.SubElement(disk_element, 'target')
+@@ -1031,7 +1039,29 @@ class LibvirtDriver(AbstractSystemsDriver):
+             driver_element.set('type', 'raw')
+ 
+             source_element = ET.SubElement(disk_element, 'source')
+-            source_element.set('file', image_path)
++            if download_vmedia:
++                source_element.set('file', image_path)
++            else:
++                # strip any IPv6-looking squared brackets and port behind them - for now lets assume IPv4-only
++                # https://[172.20.1.1:443]:80/  -> https://172.20.1.1:443/
++                # https://[172.20.1.1]:80/      -> https://172.20.1.1/
++                # https://[172.20.1.1]/         -> https://172.20.1.1/
++                parsed = urlparse(re.sub(r"\[|\]:[0-9]+|\]", "", image_path))
++                source_element.set('protocol', parsed.scheme) # http/https
++                source_element.set('name', parsed.path[1:]) # iso/fedora/Fedora-Server-dvd-x86_64-37-1.7.iso'
++
++                host_element = ET.SubElement(source_element, 'host')
++                host_element.set('name', parsed.netloc.split(':')[0])
++                # parse port if specified or assume default ones (80, 443) based on protocol
++                if len(parsed.netloc.split(':')) == 2:
++                    host_element.set('port', parsed.netloc.split(':')[1])
++                else:
++                    host_element.set('port', '80' if parsed.scheme == 'http' else '443')
++
++                # disable SSL verfication when using https
++                if parsed.scheme == 'https':
++                    ssl_element = ET.SubElement(source_element, 'ssl')
++                    ssl_element.set('verify', 'no')
+ 
+             if write_protected:
+                 ET.SubElement(disk_element, 'readonly')
+diff --git a/sushy_tools/emulator/resources/vmedia.py b/sushy_tools/emulator/resources/vmedia.py
+index 9dbee3e..e39262d 100644
+--- a/sushy_tools/emulator/resources/vmedia.py
++++ b/sushy_tools/emulator/resources/vmedia.py
+@@ -233,6 +233,7 @@ class StaticDriver(base.DriverBase):
+         :param write_protected: prevent write access the inserted media
+         :raises: `FishyError` if image can't be manipulated
+         """
++        download_vmedia = self._config.get('SUSHY_EMULATOR_VMEDIA_DOWNLOAD_TO_HYPERVISOR', True)
+         device_info = self._get_device(identity, device)
+         verify_media_cert = device_info.get(
+             'Verify',
+@@ -262,31 +263,35 @@ class StaticDriver(base.DriverBase):
+             verify_media_cert = custom_cert_file.name
+ 
+         try:
+-            with requests.get(image_url,
+-                              stream=True,
+-                              auth=auth,
+-                              verify=verify_media_cert) as rsp:
+-                if rsp.status_code >= 400:
+-                    self._logger.error(
+-                        'Failed fetching image from URL %s: '
+-                        'got HTTP error %s:\n%s',
+-                        image_url, rsp.status_code, rsp.text)
+-                    target_code = 502 if rsp.status_code >= 500 else 400
+-                    raise error.FishyError(
+-                        "Cannot download virtual media: got error %s "
+-                        "from the server" % rsp.status_code,
+-                        code=target_code)
+-
+-                with tempfile.NamedTemporaryFile(
+-                        mode='w+b', delete=False) as tmp_file:
+-
+-                    local_file = self._write_from_response(image_url,
+-                                                           rsp, tmp_file)
+-                    temp_dir = tempfile.mkdtemp(
+-                        dir=os.path.dirname(tmp_file.name))
+-                    local_file_path = os.path.join(temp_dir, local_file)
+-
+-                os.rename(tmp_file.name, local_file_path)
++            if download_vmedia:
++                with requests.get(image_url,
++                                  stream=True,
++                                  auth=auth,
++                                  verify=verify_media_cert) as rsp:
++                    if rsp.status_code >= 400:
++                        self._logger.error(
++                            'Failed fetching image from URL %s: '
++                            'got HTTP error %s:\n%s',
++                            image_url, rsp.status_code, rsp.text)
++                        target_code = 502 if rsp.status_code >= 500 else 400
++                        raise error.FishyError(
++                            "Cannot download virtual media: got error %s "
++                            "from the server" % rsp.status_code,
++                            code=target_code)
++
++                    with tempfile.NamedTemporaryFile(
++                            mode='w+b', delete=False) as tmp_file:
++
++                        local_file = self._write_from_response(image_url,
++                                                               rsp, tmp_file)
++                        temp_dir = tempfile.mkdtemp(
++                            dir=os.path.dirname(tmp_file.name))
++                        local_file_path = os.path.join(temp_dir, local_file)
++
++                    os.rename(tmp_file.name, local_file_path)
++            else:
++                local_file_path = image_url
++                local_file = 'fake'
+         except error.FishyError as ex:
+             msg = 'Failed fetching image from URL %s: %s' % (image_url, ex)
+             self._logger.error(msg)
+@@ -335,7 +340,10 @@ class StaticDriver(base.DriverBase):
+ 
+         local_file = device_info.pop('_local_file', None)
+         if local_file:
+-            os.unlink(local_file)
++            try:
++                os.unlink(local_file)
++            except Exception as ex:
++                msg = 'Failed unlinking image %s' % (local_file)
+ 
+             self._logger.debug(
+                 'Removed local file %(file)s for %(identity)s' % {
