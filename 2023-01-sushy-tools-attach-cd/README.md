@@ -5,6 +5,8 @@ This patch enables in libvirt driver ability to directly attach ISO image into C
 
 To enable this functionality you should build container image applying the patch in this directory. When running the container from this image add the option `SUSHY_EMULATOR_VMEDIA_DOWNLOAD_TO_HYPERVISOR = False` into your configuration file (typically `/etc/sushy-emulator.conf`).
 
+[Visual comparison between patched and unpatched sushy-tools](comparison_patched_vs_unpatched.md)
+
 ### Files
 
 - [Dockerfile](Dockerfile) - for building container image
