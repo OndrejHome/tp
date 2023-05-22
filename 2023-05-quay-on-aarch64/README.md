@@ -384,7 +384,7 @@ cd1ed336b977  quay             3.59%       1.971GB / 6.109GB  32.26%      50.02k
 ~~~
 
 ## How to build quay/quay image for aarch64
-Below can be used as reference for how to build same image as one that is provided here from `xxx`.
+Below can be used as reference for how to build same image as one that is provided here from `quay.io/ofamera_test/quay:v3.8.6`.
 
 The environment used for build was Fedora 38 (aarch64) with 6GB RAM, 20GB disk and 4CPU (Cortex-A55@1.8GHz).
 
