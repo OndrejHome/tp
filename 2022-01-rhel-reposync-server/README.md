@@ -1,9 +1,12 @@
 ## Simple reposync server for RHEL rpms
 Goal of script here is to provide minimal infrastructure for downloading RPMs from RHEL repos and generate simple '.repo' file that can be easily consumed by local services. Typically this will run on machine that has both access to Internet and to local network on which machines will consume the repositories.
 
-Script accepts 2 argumentes:
-- 1st custom name of RPM repository
-- 2nd URL to RH CDN for directory to download
+Script accepts 3 argumentes:
+- 1st - custom name of RPM repository
+- 2nd - URL to RH CDN for directory to download
+- 3rd - (optional, defaults to /repos) directory where rpms/repodata directories with actual repos will be downloaded
+
+Script can be run by root or non-root users as long as the direcotry for downloaded data is writable for given user.
 
 Before syncing the RPM repository script will check if it can access the repository on CDN and exit if it fails - this might be normal when there are multiple "entitlement certificates" on system, script will always select first available. If other certificate is desirable, you can edit the `template.repo` file to specify it manually. NOTE: on RHEL these certificates gets rotated over time.
 

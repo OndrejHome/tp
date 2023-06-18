@@ -1,5 +1,5 @@
 #!/bin/bash
-template_file='/root/template.repo'
+template_file="$HOME/template.repo"
 download_dir=${3:-/repos}
 rpms_subdir='rpms'
 repodata_subdir='repodata'
