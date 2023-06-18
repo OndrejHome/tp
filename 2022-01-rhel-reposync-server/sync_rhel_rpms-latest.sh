@@ -1,6 +1,6 @@
 #!/bin/bash
 template_file='/root/template.repo'
-download_dir=${download_dir:-/repos}
+download_dir=${3:-/repos}
 rpms_subdir='rpms'
 repodata_subdir='repodata'
 base_url='http://192.168.5.31'
