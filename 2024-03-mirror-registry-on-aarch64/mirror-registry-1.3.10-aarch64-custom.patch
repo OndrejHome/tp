@@ -1,0 +1,32 @@
+diff --git a/.env b/.env
+index 6f5620c..eb0c7d1 100644
+--- a/.env
++++ b/.env
+@@ -1,7 +1,7 @@
+ EE_IMAGE=quay.io/quay/mirror-registry-ee:latest
+-EE_BASE_IMAGE=registry.redhat.io/ansible-automation-platform-22/ee-minimal-rhel8:1.0.0-249
+-EE_BUILDER_IMAGE=registry.redhat.io/ansible-automation-platform-22/ansible-builder-rhel8:1.1.0-103
++EE_BASE_IMAGE=registry.redhat.io/ansible-automation-platform-24/ee-minimal-rhel8:1.0.0-528
++EE_BUILDER_IMAGE=registry.redhat.io/ansible-automation-platform-24/ansible-builder-rhel8:3.0.0-168
+ POSTGRES_IMAGE=registry.redhat.io/rhel8/postgresql-10:1-203.1669834630
+-QUAY_IMAGE=registry.redhat.io/quay/quay-rhel8:v3.8.14
++QUAY_IMAGE=quay.io/ofamera_test/quay:v3.8.14
+ REDIS_IMAGE=registry.redhat.io/rhel8/redis-6:1-92.1669834635
+ PAUSE_IMAGE=registry.access.redhat.com/ubi8/pause:8.7-6
+diff --git a/Dockerfile b/Dockerfile
+index 51ef30f..50c6669 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -22,8 +22,10 @@ ENV GOROOT=/usr/local/go
+ ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH 
+ 
+ # Get Go binary
+-RUN curl -o go1.16.4.linux-amd64.tar.gz https://dl.google.com/go/go1.16.4.linux-amd64.tar.gz
+-RUN tar -xzf go1.16.4.linux-amd64.tar.gz  &&\
++RUN ARCH=$(uname -m); echo $ARCH; \
++    if [ "$ARCH" == "x86_64" ] ; then ARCH="amd64" ; elif [ "$ARCH" == "aarch64" ] ; then ARCH="arm64" ; fi; \
++    curl -o go1.16.4.linux.tar.gz https://dl.google.com/go/go1.16.4.linux-${ARCH}.tar.gz
++RUN tar -xzf go1.16.4.linux.tar.gz  &&\
+     mv go /usr/local
+ 
+ COPY . /cli
