@@ -71,7 +71,7 @@ fi
 
 # mark repository as 'repocheck'
 if grep -q "td>$repo_id<" "$repo_state_file"; then
-  sed -i "s;^.*td>$repo_id<.*$;<tr><td>== repocheck ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${repo_id}.repo</a></td></tr>;" "$repo_state_file"
+  sed -i "s;^.*td>$repo_id<.*$;<tr><td>== repocheck ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${repo_id}.repo'>${repo_id}.repo</a></td></tr>;" "$repo_state_file"
 else
   # if there is no line with repository, then create it in first table on page
   awk -i inplace -v "date=$(date '+%Y-%m-%d %H:%M')" -v "repourl=$base_url/$rpms_subdir/$repo_id.repo" -v "reponame=$repo_id" '{print} /<tbody>/ && !x {printf "<tr><td>== repocheck ==</td><td>%s</td><td>%s</td><td><a href=\"%s\">%s.repo</a></td></tr>\n",date,reponame,repourl,reponame; x++}' "$repo_state_file"
@@ -122,7 +122,7 @@ if [ ! -L "$download_dir/$rpms_subdir/$repo_id/repodata" ]; then
 	ln -s "../../$repodata_subdir/$repo_id/repodata" "$download_dir/$rpms_subdir/$repo_id/repodata"
 fi
 
-sed -i "s;^.*td>$repo_id<.*$;<tr><td>== syncing ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
+sed -i "s;^.*td>$repo_id<.*$;<tr><td>== syncing ==</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${repo_id}.repo'>${repo_id}.repo</a></td></tr>;" "$repo_state_file"
 
 echo "Downloading packages ..."
 echo "  download_dir: $download_dir/$rpms_subdir/$repo_id"
@@ -135,14 +135,14 @@ else
   echo "  (downloading ALL packages in this repository)"
 fi
 if reposync -c "$tmp_config_file" --repo "$repo_id" $latest_flag --delete -p "$download_dir/$rpms_subdir" --download-metadata --metadata-path "$download_dir/$repodata_subdir" --delete --remote-time; then
-	sed -i "s;^.*td>$repo_id<.*$;<tr><td>OK</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
+	sed -i "s;^.*td>$repo_id<.*$;<tr><td>OK</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${repo_id}.repo'>${repo_id}.repo</a></td></tr>;" "$repo_state_file"
 	echo "Download succeeded, removing temporary repo file $tmp_config_file"
 	rm -f "$tmp_config_file"
 	echo "Repository size summary:"
 	echo "  download_dir: $download_dir/$rpms_subdir/$repo_id ($(du -sh "$download_dir/$rpms_subdir/$repo_id"|awk '{print $1}'))"
 	echo "  repodata_dir: $download_dir/$repodata_subdir/$repo_id/repodata ($(du -sh "$download_dir/$repodata_subdir/$repo_id/repodata"|awk '{print $1}'))"
 else
-	sed -i "s;^.*td>$repo_id<.*$;<tr><td>SYNC ERROR</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${1}.repo'>${1}.repo</a></td></tr>;" "$repo_state_file"
+	sed -i "s;^.*td>$repo_id<.*$;<tr><td>SYNC ERROR</td><td>$(date '+%Y-%m-%d %H:%M')</td><td>$repo_id</td><td><a href='$base_url/$rpms_subdir/${repo_id}.repo'>${repo_id}.repo</a></td></tr>;" "$repo_state_file"
 fi
 echo "Generating .repo file and checking its presence on webserver..."
 cat > "$download_dir/$rpms_subdir/$repo_id.repo" <<EOF
